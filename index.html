@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tickets">
+<meta name="theme-color" content="#000000">
+<title>Tickets</title>
+<link rel="apple-touch-icon" id="touchIcon" href="">
+<link rel="manifest" id="manifestLink" href="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Oswald:wght@500;600&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@300;400;500&display=swap">
+<style>
+/* Layout: an exact 1:1 scale of a phone Wallet pass screen. All sizes are cqw units of the screen width (screenshot px / 7.07).
+   When added to the Home Screen it runs full screen with no browser bars; the "..." button opens the editor as a bottom sheet. */
+:root {
+  --bg: #000;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --ink: #fff;
+  --ink-dim: #8e8e93;
+  --line: #3a3a3c;
+  --gold: #e3b84a;
+  --ui: "Roboto", -apple-system, system-ui, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  --display: "Alfa Slab One", Georgia, serif;
+  --cond: "Oswald", "Arial Narrow", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: #000; overscroll-behavior: none; }
+body {
+  color: var(--ink); font-family: var(--ui); min-height: 100vh; min-height: 100dvh;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) calc(40px + env(safe-area-inset-bottom, 0px)) env(safe-area-inset-left, 0px);
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-text-size-adjust: 100%;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }
+.screen { max-width: 440px; margin: 0 auto; container-type: inline-size; }
+
+.topbar { display: flex; justify-content: space-between; padding: 4.7cqw 4.67cqw 0; margin-bottom: 5.2cqw; }
+.round { width: 9.9cqw; height: 9.9cqw; border-radius: 50%; border: 0; background: #1c1c1e; color: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.round svg { width: 4.2cqw; height: 4.2cqw; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.carousel { display: flex; gap: 2.4cqw; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-inline: 4.67cqw; }
+.carousel::-webkit-scrollbar { display: none; }
+.ticket { flex: 0 0 90.5cqw; scroll-snap-align: center; border-radius: 3.1cqw; overflow: hidden; background: #151515; position: relative; }
+.ticket .notch { position: absolute; top: 0; left: 50%; width: 15.5cqw; height: 3cqw; transform: translateX(-50%); background: #000; border-radius: 0 0 8cqw 8cqw; z-index: 5; }
+.art { position: relative; aspect-ratio: 640 / 588; background: #161616; overflow: hidden; }
+.art > svg, .art > img.upload { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.art > img.upload { object-fit: cover; pointer-events: none; }
+.corner { position: absolute; top: 3.2cqw; z-index: 3; font-family: var(--ui); font-weight: 700; font-size: 3.65cqw; line-height: 1.22; color: #fff; }
+.corner.l { left: 3.1cqw; text-transform: uppercase; }
+.corner.r { right: 3.1cqw; text-align: right; }
+.corner.r .t { font-family: var(--mono); font-weight: 500; font-size: 3.65cqw; letter-spacing: .02em; }
+.titleblock { position: absolute; left: 0; right: 0; top: 18%; text-align: center; z-index: 2; padding-inline: 2cqw; }
+.titleblock .band { font-family: var(--display); font-size: 8.8cqw; line-height: .98; text-transform: uppercase; color: #f1eee6; transform: rotate(-5deg); text-shadow: .5cqw .6cqw 0 #1d3a78, 0 1cqw 2cqw rgba(0,0,0,.5); overflow-wrap: anywhere; }
+.yr { position: absolute; left: 50%; top: 35%; transform: translateX(-50%); z-index: 2; font: 700 1.5cqw var(--mono); color: #f4f0e6; letter-spacing: .1em; }
+.plate { position: absolute; left: 50%; top: 47%; transform: translateX(-50%); z-index: 2; min-width: 56%; max-width: 88%; text-align: center; padding: .9cqw 2.2cqw .7cqw; background: linear-gradient(#d9ac3f, #b78a24); border: .45cqw solid #3a2a0a; outline: .3cqw solid #e8c866; outline-offset: -1.1cqw; font-family: var(--cond); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 4cqw; line-height: 1.2; color: #1f1606; box-shadow: 0 .6cqw 1.8cqw rgba(0,0,0,.45); }
+
+.strip { position: relative; height: 30.4cqw; }
+.strip > * { position: absolute; }
+.strip .l1 { left: 3.1cqw; top: 3.2cqw; font-family: var(--ui); font-weight: 700; font-size: 5.4cqw; line-height: 7.07cqw; text-transform: uppercase; white-space: nowrap; }
+.strip .sale { left: 3.1cqw; top: 20.2cqw; font-family: var(--mono); font-weight: 400; font-size: 3.1cqw; line-height: 4.1cqw; }
+.strip .venue { left: 3.1cqw; top: 24.3cqw; font-family: var(--mono); font-weight: 400; font-size: 3.1cqw; line-height: 4.1cqw; color: #fff; }
+.strip .seclabel { right: 3.1cqw; top: 3.1cqw; font-family: var(--mono); font-weight: 400; font-size: 3.1cqw; line-height: 4.2cqw; }
+.strip .sec { right: 3.1cqw; top: 8.3cqw; font-family: var(--mono); font-weight: 400; font-size: 9cqw; line-height: 1; color: #fff; letter-spacing: 0; -webkit-text-stroke: .12cqw #fff; }
+.strip .brand { right: 3.1cqw; bottom: 2cqw; font-family: var(--ui); font-weight: 700; font-style: italic; font-size: 3.7cqw; color: #fff; letter-spacing: -.03em; line-height: 1.2; }
+
+.dots { display: flex; justify-content: center; gap: 2.3cqw; margin-top: 3.4cqw; }
+.dot { width: 1.75cqw; height: 1.75cqw; border: 0; padding: 0; border-radius: 50%; background: #5b5b5f; cursor: pointer; }
+.dot[aria-current="true"] { background: #fff; }
+
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 2.1cqw; padding: 5.3cqw 4.67cqw 0; }
+.tile { background: #1c1c1e; border-radius: 5cqw; padding: 2.8cqw 2.8cqw 3cqw; height: 26.4cqw; display: flex; flex-direction: column; justify-content: space-between; color: #fff; text-align: left; border: 0; cursor: pointer; font-family: var(--ui); min-width: 0; }
+.tile .ico { width: 7.8cqw; height: 7.8cqw; border-radius: 50%; display: grid; place-items: center; }
+.tile .ico svg { width: 3.6cqw; height: 3.6cqw; }
+.tile .name { font-weight: 700; font-size: 3.65cqw; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .sub { color: #8d8d92; font-size: 3.55cqw; line-height: 1.3; font-weight: 400; }
+
+/* edit sheet */
+.sheet { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+.backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
+.panel { position: relative; width: 100%; max-width: 480px; max-height: 90%; overflow-y: auto; background: var(--surface); border-radius: 22px 22px 0 0; padding: 10px 18px calc(24px + env(safe-area-inset-bottom, 0px)); font-size: 15px; -webkit-overflow-scrolling: touch; }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: #4a4a4e; margin: 0 auto 6px; }
+.ph { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 4px; position: sticky; top: -10px; background: var(--surface); z-index: 2; }
+.ph strong { font-size: 18px; font-weight: 700; }
+.panel h3 { font-family: var(--mono); font-weight: 400; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); margin: 20px 0 10px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.field label { font-size: 12px; color: var(--ink-dim); }
+.field input[type=text] { background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 500 16px var(--ui); width: 100%; min-width: 0; }
+.field input[type=color] { width: 100%; height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); padding: 3px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.tabs button { flex: 1; background: var(--surface-2); color: var(--ink-dim); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 500 14px var(--ui); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: #fff; color: #000; border-color: #fff; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { background: var(--gold); color: #1b1405; border: 0; border-radius: 10px; padding: 10px 14px; font: 500 14px var(--ui); cursor: pointer; }
+.btn.ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.btn.done { background: #fff; color: #000; border-radius: 999px; padding: 8px 16px; font-weight: 700; }
+.iconprev { width: 56px; height: 56px; border-radius: 13px; border: 1px solid var(--line); object-fit: cover; background: #111; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 12px; }
+.hint { color: var(--ink-dim); font-size: 13px; line-height: 1.45; margin: 10px 0 0; }
+@media (max-width: 380px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="topbar">
+    <button class="round" type="button" id="closeBtn" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    <button class="round" type="button" id="moreBtn" aria-label="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="4.5" cy="12" r="2.1"/><circle cx="12" cy="12" r="2.1"/><circle cx="19.5" cy="12" r="2.1"/></svg></button>
+  </div>
+
+  <div class="carousel" id="carousel" aria-label="Tickets"></div>
+  <div class="dots" id="dots"></div>
+
+  <div class="tiles">
+    <button class="tile" type="button">
+      <span class="ico" style="background:#d93d5c"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8" r="6"/><rect x="11" y="10" width="2" height="12" rx="1"/></svg></span>
+      <span><div class="name" data-b="venue"></div><div class="sub">Open in Maps</div></span>
+    </button>
+    <button class="tile" type="button">
+      <span class="ico" style="background:#d75ab8"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.9 6.6 7.1.7-5.3 4.8 1.5 7-6.2-3.6-6.2 3.6 1.5-7L2 9.3l7.1-.7z"/></svg></span>
+      <span><div class="name" data-b="band"></div><div class="sub">Event Guide</div></span>
+    </button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="backdrop" id="backdrop"></div>
+  <div class="panel" role="dialog" aria-label="Edit tickets">
+    <div class="grab"></div>
+    <div class="ph"><strong>Edit tickets</strong><button class="btn done" type="button" id="doneBtn">Done</button></div>
+
+    <h3>Both tickets</h3>
+    <div class="grid">
+      <div class="field wide"><label for="f-band">Artist / title</label><input type="text" id="f-band" data-k="band" autocomplete="off"></div>
+      <div class="field wide"><label for="f-tour">Tour banner</label><input type="text" id="f-tour" data-k="tour" autocomplete="off"></div>
+      <div class="field"><label for="f-date">Date</label><input type="text" id="f-date" data-k="date" autocomplete="off"></div>
+      <div class="field"><label for="f-time">Time</label><input type="text" id="f-time" data-k="time" autocomplete="off"></div>
+      <div class="field"><label for="f-venue">Venue</label><input type="text" id="f-venue" data-k="venue" autocomplete="off"></div>
+      <div class="field"><label for="f-brand">Ticketing brand</label><input type="text" id="f-brand" data-k="brand" autocomplete="off"></div>
+      <div class="field"><label for="f-note">Top-left note</label><input type="text" id="f-note" data-k="note" autocomplete="off"></div>
+      <div class="field"><label for="f-year">Small year mark</label><input type="text" id="f-year" data-k="year" autocomplete="off"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="f-showtitle" checked> Show title and banner text over the artwork</label>
+
+    <h3>Ticket details</h3>
+    <div class="tabs" id="tabs">
+      <button type="button" data-i="0" aria-pressed="true">Ticket 1</button>
+      <button type="button" data-i="1" aria-pressed="false">Ticket 2</button>
+    </div>
+    <div class="grid">
+      <div class="field wide"><label for="t-l1">Main label (use | for a line break)</label><input type="text" id="t-l1" data-t="l1" autocomplete="off"></div>
+      <div class="field"><label for="t-sale">Sale line</label><input type="text" id="t-sale" data-t="sale" autocomplete="off"></div>
+      <div class="field"><label for="t-sec">Section code</label><input type="text" id="t-sec" data-t="sec" autocomplete="off"></div>
+      <div class="field"><label for="t-seclabel">Section caption</label><input type="text" id="t-seclabel" data-t="seclabel" autocomplete="off"></div>
+      <div class="field"><label for="t-color">Strip color</label><input type="color" id="t-color" data-t="color"></div>
+      <div class="field"><label for="t-accent">Label text color</label><input type="color" id="t-accent" data-t="accent"></div>
+    </div>
+
+    <h3>Artwork</h3>
+    <div class="btnrow">
+      <button class="btn" type="button" id="upArt">Upload artwork for this ticket</button>
+      <button class="btn ghost" type="button" id="upBoth">Use it on both</button>
+      <button class="btn ghost" type="button" id="resetArt">Back to sample art</button>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <p class="hint">If your artwork already has its own lettering, untick the text option above.</p>
+
+    <h3>Home Screen app</h3>
+    <div class="grid">
+      <div class="field wide"><label for="a-name">App name</label><input type="text" id="a-name" data-a="name" maxlength="30" autocomplete="off"></div>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
+      <img class="iconprev" id="iconPrev" alt="App icon preview">
+      <button class="btn" type="button" id="upIcon">Choose app icon</button>
+      <button class="btn ghost" type="button" id="resetIcon">Default icon</button>
+    </div>
+    <input type="file" id="iconFile" accept="image/*" hidden>
+    <p class="hint">Set the name and icon first, then tap Share and Add to Home Screen in Safari. If you change them later, delete the Home Screen app and add it again.</p>
+    <p class="hint" id="saveState" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var shared = {
+    band: "Juniper Hale", tour: "The Dust & Daylight Tour", date: "JUL 24", time: "7:00 PM",
+    venue: "Harbor Field", brand: "passline", note: "Clear bags only", year: "2027"
+  };
+  var tickets = [
+    { l1: "GA FLOOR|NO SEAT", sale: "Artist Presale", sec: "GAFLR", seclabel: "Sec", color: "#3f7c22", accent: "#b9f79c", art: null },
+    { l1: "GA FLOOR|NO SEAT", sale: "Artist Presale", sec: "GAFLR", seclabel: "Sec", color: "#3f7c22", accent: "#b9f79c", art: null }
+  ];
+  var app = { name: "Tickets", icon: null };
+  var showTitle = true, current = 0, iconImg = null, manifestUrl = null;
+  var KEY = "wallet-tickets-app-v2";
+  var car = document.getElementById("carousel"), dotsEl = document.getElementById("dots"), slides = [];
+
+  function setState(m) { document.getElementById("saveState").textContent = m; }
+
+  /* ---------- storage ---------- */
+  function save() {
+    var data = { shared: shared, tickets: tickets, showTitle: showTitle, app: app };
+    try { localStorage.setItem(KEY, JSON.stringify(data)); setState("Saved on this device."); }
+    catch (e) {
+      try {
+        data.tickets = tickets.map(function (t) { var c = {}; Object.keys(t).forEach(function (k) { c[k] = t[k]; }); c.art = null; return c; });
+        localStorage.setItem(KEY, JSON.stringify(data));
+        setState("Text saved. The artwork is too large to keep, so use a smaller image.");
+      } catch (e2) { setState("This browser would not save your edits."); }
+    }
+  }
+  function restore() {
+    try {
+      var d = JSON.parse(localStorage.getItem(KEY) || "null"); if (!d) return;
+      Object.keys(shared).forEach(function (k) { if (d.shared && typeof d.shared[k] === "string") shared[k] = d.shared[k]; });
+      (d.tickets || []).forEach(function (t, i) { if (tickets[i]) Object.keys(tickets[i]).forEach(function (k) { if (k in t) tickets[i][k] = t[k]; }); });
+      if (typeof d.showTitle === "boolean") showTitle = d.showTitle;
+      if (d.app) { if (typeof d.app.name === "string") app.name = d.app.name; app.icon = d.app.icon || null; }
+      document.getElementById("f-showtitle").checked = showTitle;
+    } catch (e) {}
+  }
+
+  /* ---------- home screen name and icon ---------- */
+  function drawDefaultIcon(ctx, s) {
+    ctx.fillStyle = "#101012"; ctx.fillRect(0, 0, s, s);
+    var ox = s / 2, oy = s * 1.02, n = 9, R = s * 0.95;
+    for (var i = 0; i < n; i++) {
+      var a0 = (232 + (i / n) * 76) * Math.PI / 180, a1 = (232 + ((i + 1) / n) * 76) * Math.PI / 180;
+      ctx.beginPath(); ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + Math.cos(a0) * R, oy + Math.sin(a0) * R); ctx.lineTo(ox + Math.cos(a1) * R, oy + Math.sin(a1) * R); ctx.closePath();
+      ctx.fillStyle = i % 2 ? "#e3b84a" : "#2c55a8"; ctx.fill();
+      ctx.strokeStyle = "#f1eee6"; ctx.lineWidth = s * 0.008; ctx.stroke();
+    }
+    ctx.fillStyle = "#3f7c22"; ctx.fillRect(0, s * 0.72, s, s * 0.28);
+    ctx.fillStyle = "#b9f79c"; ctx.fillRect(s * 0.1, s * 0.8, s * 0.42, s * 0.05);
+    ctx.fillStyle = "#fff"; ctx.fillRect(s * 0.62, s * 0.78, s * 0.28, s * 0.09);
+  }
+  function iconCanvas(s) {
+    var c = document.createElement("canvas"); c.width = c.height = s; var ctx = c.getContext("2d");
+    if (iconImg) {
+      var m = Math.min(iconImg.width, iconImg.height), sx = (iconImg.width - m) / 2, sy = (iconImg.height - m) / 2;
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, s, s); ctx.drawImage(iconImg, sx, sy, m, m, 0, 0, s, s);
+    } else drawDefaultIcon(ctx, s);
+    return c;
+  }
+  function applyApp() {
+    var name = (app.name || "Tickets").trim() || "Tickets";
+    document.title = name;
+    document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute("content", name);
+    var touch = iconCanvas(180).toDataURL("image/png");
+    document.getElementById("touchIcon").setAttribute("href", touch);
+    document.getElementById("iconPrev").src = touch;
+    try {
+      var big = iconCanvas(512).toDataURL("image/png");
+      var man = { name: name, short_name: name, display: "standalone", background_color: "#000000", theme_color: "#000000", start_url: location.href.split("#")[0],
+                  icons: [{ src: big, sizes: "512x512", type: "image/png", purpose: "any" }] };
+      var url = URL.createObjectURL(new Blob([JSON.stringify(man)], { type: "application/manifest+json" }));
+      document.getElementById("manifestLink").setAttribute("href", url);
+      if (manifestUrl) URL.revokeObjectURL(manifestUrl);
+      manifestUrl = url;
+    } catch (e) {}
+  }
+
+  /* ---------- artwork ---------- */
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  function makeArt() {
+    var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 640 588"); svg.setAttribute("preserveAspectRatio", "xMidYMid slice"); svg.setAttribute("aria-hidden", "true");
+    var ox = 320, oy = 770, n = 14, R = 395, out = '<rect width="640" height="588" fill="#161616"/>';
+    for (var i = 0; i < n; i++) {
+      var a0 = (222 + (i / n) * 96) * Math.PI / 180, a1 = (222 + ((i + 1) / n) * 96) * Math.PI / 180;
+      var x0 = ox + Math.cos(a0) * R, y0 = oy + Math.sin(a0) * R, x1 = ox + Math.cos(a1) * R, y1 = oy + Math.sin(a1) * R;
+      out += '<polygon points="' + ox + "," + oy + " " + x0.toFixed(1) + "," + y0.toFixed(1) + " " + x1.toFixed(1) + "," + y1.toFixed(1) + '" fill="' + (i % 2 ? "#e3b84a" : "#2c55a8") + '" stroke="#f1eee6" stroke-width="2"/>';
+    }
+    out += '<defs><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0"/></filter></defs>';
+    out += '<rect width="640" height="588" filter="url(#grain)" opacity=".5"/>';
+    out += '<circle cx="320" cy="170" r="132" fill="none" stroke="#c9a24a" stroke-width="7"/><circle cx="320" cy="170" r="114" fill="none" stroke="#c9a24a" stroke-width="3" stroke-dasharray="4 10"/>';
+    out += '<g transform="translate(320 588) scale(1.15)"><ellipse rx="140" ry="26" fill="#0e0e10"/>';
+    out += '<polygon points="-30,0 -17,-150 17,-150 30,0" fill="#f1e9d4" stroke="#14141a" stroke-width="3"/>';
+    out += '<polygon points="-26,-34 -23,-62 23,-62 26,-34" fill="#b33a3a"/><polygon points="-20,-92 -18,-120 18,-120 20,-92" fill="#b33a3a"/>';
+    out += '<rect x="-24" y="-162" width="48" height="12" fill="#14141a"/><rect x="-15" y="-190" width="30" height="28" fill="#f6d77a" stroke="#14141a" stroke-width="3"/>';
+    out += '<polygon points="-22,-190 0,-212 22,-190" fill="#14141a"/>';
+    out += '<polygon points="15,-176 125,-208 125,-148" fill="#f6d77a" opacity=".5"/><polygon points="-15,-176 -125,-208 -125,-148" fill="#f6d77a" opacity=".5"/></g>';
+    svg.innerHTML = out; return svg;
+  }
+  function build() {
+    tickets.forEach(function (t, i) {
+      var el = document.createElement("article"); el.className = "ticket"; el.setAttribute("aria-label", "Ticket " + (i + 1));
+      el.innerHTML =
+        '<div class="art"><span class="artslot"></span><img class="upload" alt="" hidden>' +
+          '<span class="corner l" data-b="note"></span>' +
+          '<span class="corner r"><span data-b="date"></span><br><span class="t" data-b="time"></span></span>' +
+          '<div class="titleblock"><div class="band" data-b="band"></div></div>' +
+          '<div class="yr" data-b="year"></div><div class="plate" data-b="tour"></div></div>' +
+        '<div class="strip"><div class="l1"></div><div class="seclabel"></div><div class="sec"></div>' +
+        '<div class="sale"></div><div class="venue" data-b="venue"></div><div class="brand" data-b="brand"></div></div><div class="notch"></div>';
+      el.querySelector(".artslot").replaceWith(makeArt());
+      car.appendChild(el); slides.push(el);
+      var d = document.createElement("button"); d.type = "button"; d.className = "dot"; d.setAttribute("aria-label", "Show ticket " + (i + 1));
+      d.addEventListener("click", function () { goTo(i); }); dotsEl.appendChild(d);
+    });
+  }
+  function update() {
+    document.querySelectorAll("[data-b]").forEach(function (n) { n.textContent = shared[n.getAttribute("data-b")]; });
+    slides.forEach(function (el, i) {
+      var t = tickets[i];
+      el.querySelector(".strip").style.background = t.color;
+      var l1 = el.querySelector(".l1"); l1.innerHTML = t.l1.split("|").map(esc).join("<br>"); l1.style.color = t.accent;
+      var sale = el.querySelector(".sale"); sale.textContent = t.sale; sale.style.color = t.accent;
+      el.querySelector(".sec").textContent = t.sec;
+      var sl = el.querySelector(".seclabel"); sl.textContent = t.seclabel; sl.style.color = t.accent;
+      var img = el.querySelector("img.upload"), svg = el.querySelector(".art > svg");
+      if (t.art) { img.src = t.art; img.hidden = false; svg.style.display = "none"; } else { img.hidden = true; img.removeAttribute("src"); svg.style.display = ""; }
+      ["titleblock", "yr", "plate"].forEach(function (c) { el.querySelector("." + c).style.display = showTitle ? "" : "none"; });
+    });
+  }
+  function commit() { update(); save(); }
+
+  function goTo(i) { var el = slides[i]; if (el) car.scrollTo({ left: el.offsetLeft - (car.clientWidth - el.offsetWidth) / 2, behavior: "smooth" }); }
+  function syncDots() {
+    var mid = car.scrollLeft + car.clientWidth / 2, idx = 0, best = 1e9;
+    slides.forEach(function (el, i) { var d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid); if (d < best) { best = d; idx = i; } });
+    dotsEl.querySelectorAll(".dot").forEach(function (d, i) { d.setAttribute("aria-current", i === idx ? "true" : "false"); });
+  }
+  car.addEventListener("scroll", syncDots, { passive: true });
+
+  /* ---------- editor sheet ---------- */
+  var sheet = document.getElementById("sheet");
+  function openSheet() { sheet.hidden = false; }
+  function closeSheet() { sheet.hidden = true; }
+  document.getElementById("moreBtn").addEventListener("click", openSheet);
+  document.getElementById("doneBtn").addEventListener("click", closeSheet);
+  document.getElementById("backdrop").addEventListener("click", closeSheet);
+  document.getElementById("closeBtn").addEventListener("click", closeSheet);
+
+  function loadFields() {
+    document.querySelectorAll("[data-k]").forEach(function (i) { i.value = shared[i.getAttribute("data-k")]; });
+    document.querySelectorAll("[data-t]").forEach(function (i) { i.value = tickets[current][i.getAttribute("data-t")]; });
+    document.querySelectorAll("[data-a]").forEach(function (i) { i.value = app[i.getAttribute("data-a")]; });
+  }
+  document.querySelectorAll("[data-k]").forEach(function (i) { i.addEventListener("input", function () { shared[i.getAttribute("data-k")] = i.value; commit(); }); });
+  document.querySelectorAll("[data-t]").forEach(function (i) { i.addEventListener("input", function () { tickets[current][i.getAttribute("data-t")] = i.value; commit(); }); });
+  document.querySelectorAll("[data-a]").forEach(function (i) { i.addEventListener("input", function () { app[i.getAttribute("data-a")] = i.value; applyApp(); save(); }); });
+  document.getElementById("f-showtitle").addEventListener("change", function (e) { showTitle = e.target.checked; commit(); });
+  document.querySelectorAll("#tabs button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      current = +b.getAttribute("data-i");
+      document.querySelectorAll("#tabs button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      loadFields(); goTo(current);
+    });
+  });
+
+  /* artwork upload */
+  var file = document.getElementById("file"), applyBoth = false;
+  document.getElementById("upArt").addEventListener("click", function () { applyBoth = false; file.click(); });
+  document.getElementById("upBoth").addEventListener("click", function () { applyBoth = true; file.click(); });
+  document.getElementById("resetArt").addEventListener("click", function () { tickets[current].art = null; commit(); });
+  function readImage(f, cb) {
+    var r = new FileReader();
+    r.onload = function () { var im = new Image(); im.onload = function () { cb(im, r.result); }; im.src = r.result; };
+    r.readAsDataURL(f);
+  }
+  file.addEventListener("change", function () {
+    var f = file.files && file.files[0]; if (!f) return;
+    readImage(f, function (im) {
+      var s = Math.min(1, 1200 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+      c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      var data = c.toDataURL("image/jpeg", 0.82);
+      (applyBoth ? tickets : [tickets[current]]).forEach(function (t) { t.art = data; });
+      commit(); file.value = "";
+    });
+  });
+
+  /* app icon upload */
+  var iconFile = document.getElementById("iconFile");
+  document.getElementById("upIcon").addEventListener("click", function () { iconFile.click(); });
+  document.getElementById("resetIcon").addEventListener("click", function () { iconImg = null; app.icon = null; applyApp(); save(); });
+  iconFile.addEventListener("change", function () {
+    var f = iconFile.files && iconFile.files[0]; if (!f) return;
+    readImage(f, function (im) { iconImg = im; app.icon = iconCanvas(256).toDataURL("image/png"); applyApp(); save(); iconFile.value = ""; });
+  });
+
+  /* ---------- start ---------- */
+  restore();
+  function boot() { build(); loadFields(); update(); applyApp(); car.scrollLeft = 0; syncDots(); }
+  if (app.icon) { var im = new Image(); im.onload = function () { iconImg = im; boot(); }; im.onerror = boot; im.src = app.icon; } else boot();
+})();
+</script>
+</body>
+</html>
